@@ -1,0 +1,9 @@
+/build
+/.xmake
+.vscode/*.json
+!.vscode/launch.json
+*.so
+*.dll
+*.exe
+*.obj
+lib*.a

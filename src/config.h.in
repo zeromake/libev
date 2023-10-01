@@ -1,0 +1,36 @@
+
+#ifndef __LIBEV_CONFIG_H_INCLUDED
+#define __LIBEV_CONFIG_H_INCLUDED
+
+${define HAVE_SYS_INOTIFY_H}
+${define HAVE_SYS_EPOLL_H}
+${define HAVE_SYS_EVENT_H}
+${define HAVE_PORT_H}
+${define HAVE_POLL_H}
+${define HAVE_SYS_TIMERFD_H}
+
+${define HAVE_SYS_SELECT_H}
+${define HAVE_SYS_EVENTFD_H}
+${define HAVE_SYS_SIGNALFD_H}
+${define HAVE_LINUX_AIO_ABI_H}
+${define HAVE_LINUX_FS_H}
+
+${define HAVE_INOTIFY_INIT}
+${define HAVE_EPOLL_CTL}
+${define HAVE_KQUEUE}
+${define HAVE_PORT_CREATE}
+${define HAVE_POLL}
+${define HAVE_SELECT}
+${define HAVE_EVENTFD}
+${define HAVE_SIGNALFD}
+
+${define HAVE_CLOCK_GETTIME}
+${define HAVE_NANOSLEEP}
+
+${define HAVE_CLOCK_SYSCALL}
+
+${define HAVE_KERNEL_RWF_T}
+
+${define HAVE_FLOOR}
+
+#endif
