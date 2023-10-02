@@ -37,9 +37,11 @@
  * either the BSD or the GPL.
  */
 
+#ifdef __clang__
 #pragma clang diagnostic ignored "-Wunused-value"
 #pragma clang diagnostic ignored "-Wcomment"
 #pragma clang diagnostic ignored "-Wextern-initializer"
+#endif
 
 /* this big block deduces configuration from config.h */
 #ifndef EV_STANDALONE
@@ -94,7 +96,7 @@
 #   define EV_USE_NANOSLEEP 0
 # endif
 
-# if HAVE_SELECT && HAVE_SYS_SELECT_H
+# if HAVE_SELECT && (HAVE_SYS_SELECT_H || HAVE_WINSOCK2_H)
 #  ifndef EV_USE_SELECT
 #   define EV_USE_SELECT EV_FEATURE_BACKENDS
 #  endif

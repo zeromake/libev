@@ -10,6 +10,14 @@ target("ev")
   set_configdir("$(buildir)/generate")
   add_includedirs("$(buildir)/generate")
   add_configfiles("src/config.h.in")
+  
+  if is_plat("windows", "mingw") then
+    configvar_check_cincludes("HAVE_WINSOCK2_H", "winsock2.h")
+    configvar_check_cfuncs("HAVE_SELECT", "select", {includes={"winsock2.h"}})
+  else
+    configvar_check_cincludes("HAVE_SYS_SELECT_H", "sys/select.h")
+    configvar_check_cfuncs("HAVE_SELECT", "select", {includes={"sys/select.h"}})
+  end
 
   configvar_check_cincludes("HAVE_SYS_INOTIFY_H", "sys/inotify.h")
   configvar_check_cincludes("HAVE_SYS_EPOLL_H", "sys/epoll.h")
@@ -18,7 +26,6 @@ target("ev")
   configvar_check_cincludes("HAVE_POLL_H", "poll.h")
   configvar_check_cincludes("HAVE_SYS_TIMERFD_H", "sys/timerfd.h")
 
-  configvar_check_cincludes("HAVE_SYS_SELECT_H", "sys/select.h")
   configvar_check_cincludes("HAVE_SYS_EVENTFD_H", "sys/eventfd.h")
   configvar_check_cincludes("HAVE_SYS_SIGNALFD_H", "sys/signalfd.h")
   configvar_check_cincludes("HAVE_LINUX_AIO_ABI_H", "linux/aio_abi.h")
@@ -29,7 +36,7 @@ target("ev")
   configvar_check_cfuncs("HAVE_KQUEUE", "kqueue", {includes={"sys/event.h"}})
   configvar_check_cfuncs("HAVE_PORT_CREATE", "port_create", {includes={"port.h"}})
   configvar_check_cfuncs("HAVE_POLL", "poll", {includes={"poll.h"}})
-  configvar_check_cfuncs("HAVE_SELECT", "select", {includes={"sys/select.h"}})
+  
   configvar_check_cfuncs("HAVE_EVENTFD", "eventfd", {includes={"sys/eventfd.h"}})
   configvar_check_cfuncs("HAVE_SIGNALFD", "signalfd", {includes={"sys/signalfd.h"}})
   configvar_check_cfuncs("HAVE_CLOCK_GETTIME", "clock_gettime", {includes={"time.h"}})
@@ -51,8 +58,17 @@ int test() {
     "src/ev.c",
     "src/event.c"
   )
+
+  if is_plat("windows") then
+      add_files("build/generate/libev.def")
+  else
+      add_files("build/generate/libev.map")
+  end
   add_headerfiles(
     "src/ev.h",
     "src/ev++.h",
     "src/event.h"
   )
+  if is_plat("windows", "mingw") then
+    add_syslinks("ws2_32")
+  end

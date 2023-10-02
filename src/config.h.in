@@ -9,6 +9,7 @@ ${define HAVE_PORT_H}
 ${define HAVE_POLL_H}
 ${define HAVE_SYS_TIMERFD_H}
 
+${define HAVE_WINSOCK2_H}
 ${define HAVE_SYS_SELECT_H}
 ${define HAVE_SYS_EVENTFD_H}
 ${define HAVE_SYS_SIGNALFD_H}
