@@ -33,15 +33,17 @@
  *
  */
 
-#define	timersub(tvp, uvp, vvp)						\
-	do {								\
-		(vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;		\
-		(vvp)->tv_usec = (tvp)->tv_usec - (uvp)->tv_usec;	\
-		if ((vvp)->tv_usec < 0) {				\
-			(vvp)->tv_sec--;				\
-			(vvp)->tv_usec += 1000000;			\
-		}							\
-	} while (0)
+#define timersub(tvp, uvp, vvp)                       \
+  do                                                  \
+  {                                                   \
+    (vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;    \
+    (vvp)->tv_usec = (tvp)->tv_usec - (uvp)->tv_usec; \
+    if ((vvp)->tv_usec < 0)                           \
+    {                                                 \
+      (vvp)->tv_sec--;                                \
+      (vvp)->tv_usec += 1000000;                      \
+    }                                                 \
+  } while (0)
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -60,10 +62,9 @@
 #include <errno.h>
 
 #if NATIVE
-# include "ev.h"
+#include "ev.h"
 #endif
 #include <event.h>
-
 
 static int count, writes, fired;
 static int *pipes;
@@ -73,54 +74,50 @@ static int timers, native;
 static struct ev_io *evio;
 static struct ev_timer *evto;
 
-
-
-void
-read_cb(int fd, short which, void *arg)
+void read_cb(int fd, short which, void *arg)
 {
-	int idx = (int) arg, widx = idx + 1;
-	u_char ch;
+  int idx = (int)arg, widx = idx + 1;
+  u_char ch;
 
-        if (timers)
-          {
-            if (native)
-              {
+  if (timers)
+  {
+    if (native)
+    {
 #if NATIVE
-                evto [idx].repeat = 10. + drand48 ();
-                ev_timer_again (&evto [idx]);
+      evto[idx].repeat = 10. + drand48();
+      ev_timer_again(&evto[idx]);
 #else
-                abort ();
+      abort();
 #endif
-              }
-            else
-              {
-                struct timeval tv;
-                event_del (&events [idx]);
-                tv.tv_sec  = 10;
-                tv.tv_usec = drand48() * 1e6;
-                event_add(&events[idx], &tv);
-              }
-          }
+    }
+    else
+    {
+      struct timeval tv;
+      event_del(&events[idx]);
+      tv.tv_sec = 10;
+      tv.tv_usec = drand48() * 1e6;
+      event_add(&events[idx], &tv);
+    }
+  }
 
-	count += read(fd, &ch, sizeof(ch));
-	if (writes) {
-		if (widx >= num_pipes)
-			widx -= num_pipes;
-		write(pipes[2 * widx + 1], "e", 1);
-		writes--;
-		fired++;
-	}
+  count += read(fd, &ch, sizeof(ch));
+  if (writes)
+  {
+    if (widx >= num_pipes)
+      widx -= num_pipes;
+    write(pipes[2 * widx + 1], "e", 1);
+    writes--;
+    fired++;
+  }
 }
 
 #if NATIVE
-void
-read_thunk(struct ev_io *w, int revents)
+void read_thunk(struct ev_io *w, int revents)
 {
-  read_cb (w->fd, revents, w->data);
+  read_cb(w->fd, revents, w->data);
 }
 
-void
-timer_cb (struct ev_timer *w, int revents)
+void timer_cb(struct ev_timer *w, int revents)
 {
   /* nop */
 }
@@ -129,143 +126,153 @@ timer_cb (struct ev_timer *w, int revents)
 struct timeval *
 run_once(void)
 {
-	int *cp, i, space;
-	static struct timeval ta, ts, te, tv;
+  int *cp, i, space;
+  static struct timeval ta, ts, te, tv;
 
-	gettimeofday(&ta, NULL);
-	for (cp = pipes, i = 0; i < num_pipes; i++, cp += 2) {
-          if (native)
-            {
+  gettimeofday(&ta, NULL);
+  for (cp = pipes, i = 0; i < num_pipes; i++, cp += 2)
+  {
+    if (native)
+    {
 #if NATIVE
-              if (ev_is_active (&evio [i]))
-                ev_io_stop (&evio [i]);
+      if (ev_is_active(&evio[i]))
+        ev_io_stop(&evio[i]);
 
-              ev_io_set (&evio [i], cp [0], EV_READ);
-              ev_io_start (&evio [i]);
+      ev_io_set(&evio[i], cp[0], EV_READ);
+      ev_io_start(&evio[i]);
 
-              evto [i].repeat = 10. + drand48 ();
-              ev_timer_again (&evto [i]);
+      evto[i].repeat = 10. + drand48();
+      ev_timer_again(&evto[i]);
 #else
-              abort ();
+      abort();
 #endif
-            }
-          else
-            {
-		event_del(&events[i]);
-		event_set(&events[i], cp[0], EV_READ | EV_PERSIST, read_cb, (void *) i);
-                tv.tv_sec  = 10.;
-                tv.tv_usec = drand48() * 1e6;
-		event_add(&events[i], timers ? &tv : 0);
-            }
-	}
+    }
+    else
+    {
+      event_del(&events[i]);
+      event_set(&events[i], cp[0], EV_READ | EV_PERSIST, read_cb, (void *)i);
+      tv.tv_sec = 10.;
+      tv.tv_usec = drand48() * 1e6;
+      event_add(&events[i], timers ? &tv : 0);
+    }
+  }
 
-	event_loop(EVLOOP_ONCE | EVLOOP_NONBLOCK);
+  event_loop(EVLOOP_ONCE | EVLOOP_NONBLOCK);
 
-	fired = 0;
-	space = num_pipes / num_active;
-	space = space * 2;
-	for (i = 0; i < num_active; i++, fired++)
-		write(pipes[i * space + 1], "e", 1);
+  fired = 0;
+  space = num_pipes / num_active;
+  space = space * 2;
+  for (i = 0; i < num_active; i++, fired++)
+    write(pipes[i * space + 1], "e", 1);
 
-	count = 0;
-	writes = num_writes;
-	{ int xcount = 0;
-	gettimeofday(&ts, NULL);
-	do {
-		event_loop(EVLOOP_ONCE | EVLOOP_NONBLOCK);
-		xcount++;
-	} while (count != fired);
-	gettimeofday(&te, NULL);
+  count = 0;
+  writes = num_writes;
+  {
+    int xcount = 0;
+    gettimeofday(&ts, NULL);
+    do
+    {
+      event_loop(EVLOOP_ONCE | EVLOOP_NONBLOCK);
+      xcount++;
+    } while (count != fired);
+    gettimeofday(&te, NULL);
 
-	//if (xcount != count) fprintf(stderr, "Xcount: %d, Rcount: %d\n", xcount, count);
-	}
+    // if (xcount != count) fprintf(stderr, "Xcount: %d, Rcount: %d\n", xcount, count);
+  }
 
-	timersub(&te, &ta, &ta);
-	timersub(&te, &ts, &ts);
-		fprintf(stdout, "%8ld %8ld\n",
-			ta.tv_sec * 1000000L + ta.tv_usec,
-			ts.tv_sec * 1000000L + ts.tv_usec
-                        );
+  timersub(&te, &ta, &ta);
+  timersub(&te, &ts, &ts);
+  fprintf(stdout, "%8ld %8ld\n",
+          ta.tv_sec * 1000000L + ta.tv_usec,
+          ts.tv_sec * 1000000L + ts.tv_usec);
 
-	return (&te);
+  return (&te);
 }
 
-int
-main (int argc, char **argv)
+int main(int argc, char **argv)
 {
-	struct rlimit rl;
-	int i, c;
-	struct timeval *tv;
-	int *cp;
-	extern char *optarg;
+  struct rlimit rl;
+  int i, c;
+  struct timeval *tv;
+  int *cp;
+  extern char *optarg;
 
-	num_pipes = 100;
-	num_active = 1;
-	num_writes = num_pipes;
-	while ((c = getopt(argc, argv, "n:a:w:te")) != -1) {
-		switch (c) {
-		case 'n':
-			num_pipes = atoi(optarg);
-			break;
-		case 'a':
-			num_active = atoi(optarg);
-			break;
-		case 'w':
-			num_writes = atoi(optarg);
-			break;
-		case 'e':
-                        native = 1;
-			break;
-		case 't':
-                        timers = 1;
-			break;
-		default:
-			fprintf(stderr, "Illegal argument \"%c\"\n", c);
-			exit(1);
-		}
-	}
+  num_pipes = 100;
+  num_active = 1;
+  num_writes = num_pipes;
+  while ((c = getopt(argc, argv, "n:a:w:te")) != -1)
+  {
+    switch (c)
+    {
+    case 'n':
+      num_pipes = atoi(optarg);
+      break;
+    case 'a':
+      num_active = atoi(optarg);
+      break;
+    case 'w':
+      num_writes = atoi(optarg);
+      break;
+    case 'e':
+      native = 1;
+      break;
+    case 't':
+      timers = 1;
+      break;
+    default:
+      fprintf(stderr, "Illegal argument \"%c\"\n", c);
+      exit(1);
+    }
+  }
 
 #if 1
-	rl.rlim_cur = rl.rlim_max = num_pipes * 2 + 50;
-	if (setrlimit(RLIMIT_NOFILE, &rl) == -1) {
-		perror("setrlimit");
-	}
+  rl.rlim_cur = rl.rlim_max = num_pipes * 2 + 50;
+  if (setrlimit(RLIMIT_NOFILE, &rl) == -1)
+  {
+    perror("setrlimit");
+  }
 #endif
 
 #if NATIVE
-	evio = calloc(num_pipes, sizeof(struct ev_io));
-	evto = calloc(num_pipes, sizeof(struct ev_timer));
+  evio = calloc(num_pipes, sizeof(struct ev_io));
+  evto = calloc(num_pipes, sizeof(struct ev_timer));
 #endif
-	events = calloc(num_pipes, sizeof(struct event));
-	pipes = calloc(num_pipes * 2, sizeof(int));
-	if (events == NULL || pipes == NULL) {
-		perror("malloc");
-		exit(1);
-	}
+  events = calloc(num_pipes, sizeof(struct event));
+  pipes = calloc(num_pipes * 2, sizeof(int));
+  if (events == NULL || pipes == NULL)
+  {
+    perror("malloc");
+    exit(1);
+  }
 
-	event_init();
+  event_init();
 
-	for (cp = pipes, i = 0; i < num_pipes; i++, cp += 2) {
+  for (cp = pipes, i = 0; i < num_pipes; i++, cp += 2)
+  {
 #if NATIVE
-          if (native) {
-            ev_init (&evto [i], timer_cb);
-            ev_init (&evio [i], read_thunk);
-            evio [i].data = (void *)i;
-          }
+    if (native)
+    {
+      ev_init(&evto[i], timer_cb);
+      ev_init(&evio[i], read_thunk);
+      evio[i].data = (void *)i;
+    }
 #endif
 #ifdef USE_PIPES
-		if (pipe(cp) == -1) {
+    if (pipe(cp) == -1)
+    {
 #else
-		if (socketpair(AF_UNIX, SOCK_STREAM, 0, cp) == -1) {
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, cp) == -1)
+    {
 #endif
-			perror("pipe");
-			exit(1);
-		}
-	}
+      perror("pipe");
+      exit(1);
+    }
+  }
 
-	for (i = 0; i < 2; i++) {
-		tv = run_once();
-	}
+  for (i = 0; i < 2; i++)
+  {
+    tv = run_once();
+  }
 
-	exit(0);
+  exit(0);
 }
