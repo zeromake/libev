@@ -1,7 +1,4 @@
-includes("check_cincludes.lua")
-includes("check_csnippets.lua")
-includes("check_cfuncs.lua")
-includes("check_ctypes.lua")
+includes("@builtin/check")
 
 add_rules("mode.debug", "mode.release")
 
@@ -58,12 +55,6 @@ int test() {
     "src/ev.c",
     "src/event.c"
   )
-
-  if is_plat("windows") then
-      add_files("build/generate/libev.def")
-  else
-      add_files("build/generate/libev.map")
-  end
   add_headerfiles(
     "src/ev.h",
     "src/ev++.h",
@@ -72,3 +63,28 @@ int test() {
   if is_plat("windows", "mingw") then
     add_syslinks("ws2_32")
   end
+  on_config(function (target)
+    local list = {}
+    local lines = io.lines(path.join(os.scriptdir(), "scripts/Symbols.ev"))
+    for line in lines do
+      if line ~= "" then
+        table.insert(list, line)
+      end
+    end
+
+    lines = io.lines(path.join(os.scriptdir(), "scripts/Symbols.event"))
+    for line in lines do
+      if line ~= "" then
+        table.insert(list, line)
+      end
+    end
+    if is_kind("shared") then
+      import("scripts.export_symbol_imp")(target, {
+        export = list,
+        unexport = {
+          'ev_child_start',
+          'ev_child_stop',
+        }
+      })
+    end
+  end)
