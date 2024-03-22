@@ -78,13 +78,11 @@ int test() {
         table.insert(list, line)
       end
     end
-    if is_kind("shared") then
-      import("scripts.export_symbol_imp")(target, {
-        export = list,
-        unexport = {
-          'ev_child_start',
-          'ev_child_stop',
-        }
-      })
-    end
+    import("scripts.export_symbol_imp")(target, {
+      export = list,
+      unexport = {
+        'ev_child_start',
+        'ev_child_stop',
+      }
+    })
   end)
